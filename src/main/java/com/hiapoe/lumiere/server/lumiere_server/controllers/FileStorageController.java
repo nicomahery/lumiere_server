@@ -1,24 +1,25 @@
 package com.hiapoe.lumiere.server.lumiere_server.controllers;
 
 import com.hiapoe.lumiere.server.lumiere_server.entities.UploadFileResponse;
+import com.hiapoe.lumiere.server.lumiere_server.exceptions.FileStorageException;
 import com.hiapoe.lumiere.server.lumiere_server.services.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @RestController
 public class FileStorageController {
@@ -33,23 +34,63 @@ public class FileStorageController {
     }
 
     @PostMapping("/uploadFile/{directoryName}")
-    public UploadFileResponse uploadFile(@PathVariable String directoryName, @RequestParam("file") MultipartFile file) {
-        String fileName = fileStorageService.storeFile(directoryName, file);
+    public ResponseEntity uploadFile(@PathVariable String directoryName, @RequestParam("file") MultipartFile file) {
+        if (Objects.isNull(file)) {
+            FileStorageController.logger.warn("/uploadFile/ file cannot be null");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("/uploadFile/ file cannot be null");
+        }
 
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/downloadFile/")
-                .path(fileName)
-                .toUriString();
+        try {
+            String fileName = fileStorageService.storeFile(directoryName, file);
 
-        return new UploadFileResponse(fileName, fileDownloadUri,
-                file.getContentType(), file.getSize());
+            String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/downloadFile/" + directoryName + "/")
+                    .path(fileName)
+                    .toUriString();
+
+            FileStorageController.logger.info(fileDownloadUri);
+            return ResponseEntity.ok(new UploadFileResponse(fileName, fileDownloadUri,
+                    file.getContentType(), file.getSize()));
+        }
+        catch (FileStorageException exception) {
+            FileStorageController.logger.error("Unable to upload file", exception);
+            return ResponseEntity.internalServerError().body(exception);
+        }
     }
 
     @PostMapping("/uploadMultipleFiles/{directoryName}")
-    public List<UploadFileResponse> uploadMultipleFiles(@PathVariable String directoryName, @RequestParam("files") MultipartFile[] files) {
-        return Arrays.stream(files)
-                .map(file -> uploadFile(directoryName, file))
-                .collect(Collectors.toList());
+    public ResponseEntity uploadMultipleFiles(@PathVariable String directoryName, @RequestParam("files") MultipartFile[] files) {
+        if (files.length < 1) {
+            FileStorageController.logger.warn("/uploadMultipleFiles/ can't upload an empty list of files");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("/uploadMultipleFiles/ can't upload an empty list of files");
+        }
+
+        List<UploadFileResponse> responseList = new ArrayList<>();
+        for(MultipartFile file : files) {
+            try {
+                String filename = this.fileStorageService.storeFile(directoryName, file);
+                String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                        .path("/downloadFile/" + directoryName + "/")
+                        .path(filename)
+                        .toUriString();
+
+                responseList.add(new UploadFileResponse(filename, fileDownloadUri,
+                        file.getContentType(), file.getSize()));
+            }
+            catch (FileStorageException exception) {
+                FileStorageController.logger.error("Unable to upload file", exception);
+            }
+        }
+        if (responseList.isEmpty()) {
+            FileStorageController.logger.error("/uploadMultipleFiles/ was unable to upload any files in the list");
+            return ResponseEntity.internalServerError().body("/uploadMultipleFiles/ was unable to upload file any files in the list");
+        }
+        if (responseList.size() < files.length) {
+            FileStorageController.logger.warn("/uploadMultipleFiles/ was unable to upload some files in the list");
+            return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(responseList);
+        }
+
+        return ResponseEntity.ok(responseList);
     }
 
     @GetMapping("/downloadFile/{directoryName}/{fileName:.+}")
