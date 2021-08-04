@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class FileStorageServiceProperties {
     private String uploadDirectory;
     private String accessKey;
+    private String finalDestinationDirectory;
+    private String finalDestinationCron;
 
     public String getUploadDirectory() {
         return uploadDirectory;
@@ -21,5 +23,21 @@ public class FileStorageServiceProperties {
 
     public void setAccessKey(String accessKey) {
         this.accessKey = accessKey;
+    }
+
+    public String getFinalDestinationDirectory() {
+        return finalDestinationDirectory;
+    }
+
+    public void setFinalDestinationDirectory(String finalDestinationDirectory) {
+        this.finalDestinationDirectory = finalDestinationDirectory;
+    }
+
+    public String getFinalDestinationCron() {
+        return finalDestinationCron;
+    }
+
+    public void setFinalDestinationCron(String finalDestinationCron) {
+        this.finalDestinationCron = finalDestinationCron;
     }
 }

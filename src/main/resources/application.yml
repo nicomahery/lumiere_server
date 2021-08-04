@@ -8,4 +8,6 @@ spring:
 
 file-storage-service:
   upload-directory: ${FILE_DIRECTORY:/} # All files uploaded through the REST API will be stored in this directory
-  access-key: ${ACCESS_KEY:}
+  access-key: ${ACCESS_KEY:} # Access key used in order to send requests to API
+  final-destination-directory: ${FINAL_DESTINATION_DIRECTORY:/final}
+  final-destination-cron: ${FINAL_DESTINATION_CRON:0 0 0 * * ?}

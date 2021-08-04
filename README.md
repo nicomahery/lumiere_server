@@ -22,6 +22,7 @@ services:
       - ACCESS_KEY=accesskey
     volumes:
       - ./data:/downloadedFiles #Location where files will be downloaded first
+      - ./finalDestination:/finalDestination #Location where files will be moved every cron expression
     ports:
       - 8080:8080
     restart: unless-stopped
@@ -35,6 +36,7 @@ docker run -d \
   -e ACCESS_KEY=accesskey \
   -p 8080:8080 \
   -v ./data:/downloadedFiles \
+  -v ./finalDestination:/finalDestination \
   --restart unless-stopped \
   nicomahery/lumiere_server:latest
 ```
