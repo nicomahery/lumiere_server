@@ -34,7 +34,8 @@ public class FileStorageController {
     }
 
     @PostMapping("/uploadFile/{directoryName}")
-    public ResponseEntity uploadFile(@PathVariable String directoryName, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity uploadFile(@PathVariable String directoryName, @RequestParam("file") MultipartFile file,
+                                     @RequestParam("access-key") String accessKey) {
         if (Objects.isNull(file)) {
             FileStorageController.logger.warn("/uploadFile/ file cannot be null");
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("/uploadFile/ file cannot be null");
