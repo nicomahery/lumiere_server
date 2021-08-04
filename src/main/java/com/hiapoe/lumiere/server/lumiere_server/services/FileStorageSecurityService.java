@@ -22,7 +22,6 @@ public class FileStorageSecurityService {
      * @return true if the given access key is equals to the registered access key
      */
     public boolean isAccessKeyCorrect(String accessKey) {
-        System.out.println("PLOP: " + this.accessKey);
         return Objects.equals(accessKey, this.accessKey);
     }
 }
