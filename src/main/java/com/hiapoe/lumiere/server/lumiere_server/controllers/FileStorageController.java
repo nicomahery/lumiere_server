@@ -48,12 +48,12 @@ public class FileStorageController {
                     .path(fileName)
                     .toUriString();
 
-            FileStorageController.logger.info(fileDownloadUri);
+            FileStorageController.logger.info(String.format("File saved /%s/%s", directoryName, fileName));
             return ResponseEntity.ok(new UploadFileResponse(fileName, fileDownloadUri,
                     file.getContentType(), file.getSize()));
         }
         catch (FileStorageException exception) {
-            FileStorageController.logger.error("Unable to upload file", exception);
+            FileStorageController.logger.error(String.format("Unable to upload file /%s/%s", directoryName, file.getOriginalFilename()), exception);
             return ResponseEntity.internalServerError().body(exception);
         }
     }
@@ -89,7 +89,7 @@ public class FileStorageController {
             FileStorageController.logger.warn("/uploadMultipleFiles/ was unable to upload some files in the list");
             return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(responseList);
         }
-
+        FileStorageController.logger.info(String.format("List of %d Files saved", files.length));
         return ResponseEntity.ok(responseList);
     }
 
@@ -110,6 +110,8 @@ public class FileStorageController {
         if(contentType == null) {
             contentType = "application/octet-stream";
         }
+
+        FileStorageController.logger.info(String.format("File /%s/%s downloaded", directoryName, fileName));
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
