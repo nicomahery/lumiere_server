@@ -59,6 +59,11 @@ public class FileStorageController {
         }
     }
 
+    @PostMapping("/testConnection")
+    public ResponseEntity testConnection(@RequestParam("payload") String payload) {
+        return ResponseEntity.ok(payload);
+    }
+
     @PostMapping("/uploadMultipleFiles/{directoryName}")
     public ResponseEntity uploadMultipleFiles(@PathVariable String directoryName, @RequestParam("files") MultipartFile[] files) {
         if (files.length < 1) {
